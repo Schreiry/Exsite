@@ -1,0 +1,578 @@
+/**
+ * Оформление витрины.
+ *
+ * АРХИТЕКТУРА В ТРЁХ СЛОЯХ. Всё остальное — следствия.
+ *
+ *   1. ГЛУБИНА. Самый нижний слой — уголь: почти чёрный, но не чёрный. По нему
+ *      непрерывно течёт живая ткань, которую считает видеокарта. Он один на
+ *      весь сайт и не перезапускается при переходе между страницами.
+ *
+ *   2. СОДЕРЖАНИЕ. Поверх глубины лежат светлые плиты — то, что читают. Они
+ *      непрозрачные и чистые: текст никогда не борется с фоном за внимание.
+ *
+ *   3. УПРАВЛЕНИЕ. Между ними живёт стекло: док, кнопки, выбранные карточки.
+ *      Только этот слой преломляет то, что под ним, и только он ловит свет.
+ *
+ * ПОЧЕМУ СТЕКЛО ТОЛЬКО НА УПРАВЛЕНИИ. Настоящее преломление заставляет браузер
+ * пересчитывать искажённую копию всего, что лежит под элементом, в каждом
+ * кадре. Раньше это висело на каждой кнопке и карточке — отсюда и тормоза.
+ * Теперь линза стоит там, где человек взаимодействует, и её видно именно
+ * потому, что она не везде.
+ *
+ * ДВИЖЕНИЕ ТОЛЬКО ФИЗИЧЕСКОЕ. Ни одного `ease-in-out`: всё движется по кривым
+ * с длинным выходом, как предметы, у которых есть вес.
+ */
+
+@import '@fontsource-variable/jost/wght.css';
+@import '@fontsource-variable/geologica/wght.css';
+@import '@fontsource-variable/noto-sans-georgian/wght.css';
+
+/* Грузинские заголовки — то же капительное начертание, что в программе.
+   `unicode-range` держит файл на коротком поводке: на русском и английском
+   браузер его вообще не скачивает. */
+@font-face {
+	font-family: 'BPG Nino Mtavruli';
+	src: url('/fonts/bpg-nino-mtavruli-400.woff2') format('woff2');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+	unicode-range: U+10D0-10FF;
+}
+@font-face {
+	font-family: 'BPG Nino Mtavruli';
+	src: url('/fonts/bpg-nino-mtavruli-700.woff2') format('woff2');
+	font-weight: 700;
+	font-style: normal;
+	font-display: swap;
+	unicode-range: U+10D0-10FF;
+}
+
+:root {
+	color-scheme: dark;
+
+	/* ── Глубина ─────────────────────────────────────────────────────────── */
+	--void: #08080a;
+	--coal: #0e0f13;
+	--slate: #16161d;
+	--ash: #27272a;
+
+	/* ── Чернила на глубине ──────────────────────────────────────────────── */
+	--ink: #f4f5f8;
+	--ink-soft: color-mix(in srgb, var(--ink) 74%, transparent);
+	--ink-faint: color-mix(in srgb, var(--ink) 50%, transparent);
+	--line: color-mix(in srgb, var(--ink) 12%, transparent);
+	--line-strong: color-mix(in srgb, var(--ink) 24%, transparent);
+
+	/* ── Стекло ──────────────────────────────────────────────────────────── */
+	/* Три ступени по высоте над фоном. Чем выше поверхность, тем она светлее и
+	   тем сильнее размывает: так глаз читает расстояние без единой тени. */
+	--glass-1: color-mix(in srgb, #ffffff 5%, transparent);
+	--glass-2: color-mix(in srgb, #ffffff 8%, transparent);
+	--glass-3: color-mix(in srgb, #ffffff 12%, transparent);
+	--glass-edge: color-mix(in srgb, #ffffff 16%, transparent);
+	--glass-edge-hot: color-mix(in srgb, #ffffff 34%, transparent);
+	--blur-1: 14px;
+	--blur-2: 22px;
+	--blur-3: 34px;
+
+	/* ── Свет ────────────────────────────────────────────────────────────── */
+	--shadow-1: 0 1px 2px rgb(0 0 0 / 0.32), 0 8px 26px rgb(0 0 0 / 0.28);
+	--shadow-2: 0 2px 6px rgb(0 0 0 / 0.38), 0 22px 60px rgb(0 0 0 / 0.42);
+	--shadow-3: 0 4px 12px rgb(0 0 0 / 0.44), 0 42px 110px rgb(0 0 0 / 0.55);
+	/* Блик на верхней кромке — то, что отличает стекло от пластика. */
+	--sheen: inset 0 1px 0 color-mix(in srgb, #ffffff 22%, transparent);
+
+	/* ── Действие ────────────────────────────────────────────────────────── */
+	--accent: #ffffff;
+	--accent-ink: #0a0b0e;
+
+	/* ── Шрифты ──────────────────────────────────────────────────────────── */
+	--font-display: 'Jost Variable', 'BPG Nino Mtavruli', 'Jost', system-ui, sans-serif;
+	--font-sans:
+		'Geologica Variable', 'Noto Sans Georgian Variable', -apple-system, BlinkMacSystemFont,
+		'Segoe UI', system-ui, sans-serif;
+
+	/* ── Размеры ─────────────────────────────────────────────────────────── */
+	--radius-s: 18px;
+	--radius: 26px;
+	--radius-l: 34px;
+	--radius-xl: 46px;
+	--page: min(1240px, 90vw);
+	--page-wide: min(1500px, 94vw);
+	/* Место под док внизу — его резервирует страница, чтобы док никогда не
+	   накрывал последнюю строку текста. */
+	--dock-space: 132px;
+
+	/* ── Движение ────────────────────────────────────────────────────────── */
+	/* Длинный выход: предмет быстро трогается и мягко останавливается. Именно
+	   это читается как «дорого», а не длительность сама по себе. */
+	--ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+	--ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+	--ease-spring: cubic-bezier(0.34, 1.42, 0.64, 1);
+	--t-fast: 0.24s;
+	--t-base: 0.42s;
+	--t-slow: 0.72s;
+}
+
+/* Светлая плита: внутри неё цвета переворачиваются, и те же классы работают
+   без единого дублирующего правила. */
+.on-light {
+	color-scheme: light;
+	--ink: #16181c;
+	--ink-soft: color-mix(in srgb, var(--ink) 72%, transparent);
+	--ink-faint: color-mix(in srgb, var(--ink) 48%, transparent);
+	--line: color-mix(in srgb, var(--ink) 10%, transparent);
+	--line-strong: color-mix(in srgb, var(--ink) 20%, transparent);
+	--glass-1: color-mix(in srgb, #ffffff 62%, transparent);
+	--glass-2: color-mix(in srgb, #ffffff 74%, transparent);
+	--glass-3: color-mix(in srgb, #ffffff 86%, transparent);
+	--glass-edge: color-mix(in srgb, var(--ink) 9%, transparent);
+	--glass-edge-hot: color-mix(in srgb, var(--ink) 22%, transparent);
+	--sheen: inset 0 1px 0 color-mix(in srgb, #ffffff 80%, transparent);
+	--shadow-1: 0 1px 2px rgb(16 18 28 / 0.05), 0 12px 32px rgb(16 18 28 / 0.07);
+	--shadow-2: 0 2px 6px rgb(16 18 28 / 0.07), 0 26px 66px rgb(16 18 28 / 0.11);
+	--accent: #16181c;
+	--accent-ink: #ffffff;
+	color: var(--ink);
+}
+
+/* Грузинскому письму нужны свои правила набора: заглавных букв в нём нет
+   (`uppercase` переключает браузер на другое начертание), а длинным хвостам
+   букв нужен воздух между строками. То же сделано в самой программе. */
+:root:lang(ka) {
+	--line-height-base: 1.74;
+}
+:lang(ka) .eyebrow,
+:lang(ka) .badge,
+:lang(ka) .mono {
+	text-transform: none;
+	letter-spacing: 0.02em;
+}
+
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+}
+
+html {
+	scroll-behavior: smooth;
+	scroll-padding-top: 40px;
+	background: var(--void);
+}
+
+body {
+	margin: 0;
+	padding: 0;
+	background: transparent;
+	color: var(--ink);
+	font-family: var(--font-sans);
+	font-size: 16px;
+	font-weight: 350;
+	line-height: var(--line-height-base, 1.6);
+	-webkit-font-smoothing: antialiased;
+	text-rendering: optimizeLegibility;
+	overflow-x: hidden;
+}
+
+a {
+	color: inherit;
+	text-decoration: none;
+}
+
+h1,
+h2,
+h3,
+h4 {
+	margin: 0;
+	font-family: var(--font-display);
+	font-weight: 400;
+	line-height: 1.04;
+	letter-spacing: -0.03em;
+	text-wrap: balance;
+}
+
+/* Крупно и тонко: у больших надписей вес меньше, а не больше — тяжёлый
+   заголовок в шестьдесят точек выглядит криком. */
+h1 {
+	font-size: clamp(2.9rem, 7vw, 6rem);
+	font-weight: 300;
+	letter-spacing: -0.04em;
+}
+h2 {
+	font-size: clamp(2rem, 4.4vw, 3.6rem);
+	font-weight: 300;
+	letter-spacing: -0.035em;
+}
+h3 {
+	font-size: clamp(1.15rem, 1.7vw, 1.5rem);
+	font-weight: 450;
+}
+h4 {
+	font-size: 1.04rem;
+	font-weight: 450;
+	letter-spacing: -0.01em;
+}
+
+p {
+	margin: 0;
+	text-wrap: pretty;
+}
+
+.page {
+	width: var(--page);
+	margin: 0 auto;
+}
+.page-wide {
+	width: var(--page-wide);
+	margin: 0 auto;
+}
+
+/* ── Текст ───────────────────────────────────────────────────────────────── */
+.eyebrow {
+	display: inline-block;
+	font-size: 0.72rem;
+	font-weight: 500;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--ink-faint);
+}
+/* Техническая подпись: мелкая, разреженная, моноширинная по цифрам. Контраст
+   с огромным заголовком и создаёт инженерную интонацию. */
+.mono {
+	font-size: 0.68rem;
+	font-weight: 450;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	font-variant-numeric: tabular-nums;
+	color: var(--ink-faint);
+}
+.lead {
+	font-size: clamp(1.1rem, 1.6vw, 1.4rem);
+	font-weight: 300;
+	line-height: 1.5;
+	color: var(--ink-soft);
+	max-width: 62ch;
+}
+.muted {
+	color: var(--ink-soft);
+}
+.faint {
+	color: var(--ink-faint);
+}
+/* Цена и любое число, которое нельзя разрывать. */
+.nums {
+	font-variant-numeric: tabular-nums;
+	white-space: nowrap;
+}
+
+/* ── Плиты ───────────────────────────────────────────────────────────────── */
+/**
+ * Светлая плита содержания — главный предмет сайта.
+ *
+ * Она непрозрачная и яркая намеренно: на угольном полотне читают именно с неё,
+ * и сквозь текст не должно просвечивать ничего. Плита сама переворачивает
+ * цвета внутри себя, поэтому заголовки, подписи, кнопки и стекло внутри
+ * работают без единого дублирующего правила — те же классы, другая среда.
+ */
+.slab {
+	position: relative;
+	border-radius: var(--radius-l);
+	/**
+	 * Настоящее белое стекло на тёмном полотне.
+	 *
+	 * Хитрость в `brightness`. Белая полупрозрачная плёнка поверх угля даёт
+	 * серый — поэтому первая попытка была почти непрозрачной, и стекло
+	 * перестало быть стеклом. Здесь плита сначала ОСВЕТЛЯЕТ то, что под ней,
+	 * и только потом подкрашивает белым: складки полотна остаются видны
+	 * размытым рисунком, а поверхность получается светлой, мутной и живой.
+	 * Искажение (`#exsul-lens`) добавляет краям толщину настоящей линзы.
+	 */
+	background: linear-gradient(
+		180deg,
+		color-mix(in srgb, #ffffff 34%, transparent),
+		color-mix(in srgb, #ffffff 22%, transparent)
+	);
+	-webkit-backdrop-filter: blur(var(--blur-3)) saturate(150%) brightness(2.9);
+	backdrop-filter: blur(var(--blur-3)) saturate(150%) brightness(2.9);
+	border: 1px solid color-mix(in srgb, #ffffff 55%, transparent);
+	box-shadow:
+		var(--shadow-3),
+		inset 0 1px 0 color-mix(in srgb, #ffffff 85%, transparent),
+		inset 0 -1px 0 color-mix(in srgb, #ffffff 22%, transparent);
+	overflow: hidden;
+
+	color-scheme: light;
+	--ink: #14161b;
+	--ink-soft: color-mix(in srgb, var(--ink) 72%, transparent);
+	--ink-faint: color-mix(in srgb, var(--ink) 48%, transparent);
+	--line: color-mix(in srgb, var(--ink) 10%, transparent);
+	--line-strong: color-mix(in srgb, var(--ink) 20%, transparent);
+	--glass-1: color-mix(in srgb, var(--ink) 4%, transparent);
+	--glass-2: color-mix(in srgb, var(--ink) 6%, transparent);
+	--glass-3: color-mix(in srgb, var(--ink) 9%, transparent);
+	--glass-edge: color-mix(in srgb, var(--ink) 10%, transparent);
+	--glass-edge-hot: color-mix(in srgb, var(--ink) 24%, transparent);
+	--sheen: inset 0 1px 0 #ffffff;
+	--shadow-1: 0 1px 2px rgb(16 18 28 / 0.05), 0 10px 26px rgb(16 18 28 / 0.06);
+	--shadow-2: 0 2px 6px rgb(16 18 28 / 0.07), 0 22px 56px rgb(16 18 28 / 0.1);
+	--accent: #14161b;
+	--accent-ink: #ffffff;
+	color: var(--ink);
+}
+
+/* Тёмная плита: тот же предмет, но из графита. */
+.slab-dark {
+	position: relative;
+	border-radius: var(--radius-l);
+	background: linear-gradient(180deg, var(--slate), var(--coal));
+	border: 1px solid var(--glass-edge);
+	box-shadow: var(--shadow-2);
+	overflow: hidden;
+}
+
+/* ── Стекло ──────────────────────────────────────────────────────────────── */
+/* Базовое стекло: размытие, светлая кромка, блик сверху. Без искажения. */
+.glass {
+	position: relative;
+	background: var(--glass-2);
+	border: 1px solid var(--glass-edge);
+	border-radius: var(--radius);
+	-webkit-backdrop-filter: blur(var(--blur-2)) saturate(150%);
+	backdrop-filter: blur(var(--blur-2)) saturate(150%);
+	box-shadow: var(--shadow-1), var(--sheen);
+}
+
+/* Линза: то же стекло, но оно ещё и искажает фон под собой, как настоящее.
+   Работает через SVG-фильтр, подключённый в оболочке. Браузеры, которые так
+   не умеют, показывают обычное стекло — разница заметна только рядом. */
+@supports (backdrop-filter: url('#x')) {
+	.lens {
+		-webkit-backdrop-filter: blur(var(--blur-2)) saturate(160%) url('#exsul-lens');
+		backdrop-filter: blur(var(--blur-2)) saturate(160%) url('#exsul-lens');
+	}
+	/* Плита искажает мягче дока: под ней лежит текст, и сильное искажение
+	   заставляло бы буквы плыть вместе с фоном. */
+	.slab {
+		-webkit-backdrop-filter: blur(var(--blur-3)) saturate(150%) brightness(2.9)
+			url('#exsul-lens-soft');
+		backdrop-filter: blur(var(--blur-3)) saturate(150%) brightness(2.9) url('#exsul-lens-soft');
+	}
+}
+
+/**
+ * Зерно на стекле.
+ *
+ * У настоящего матового стекла поверхность не идеально гладкая. Без этой
+ * мельчайшей крупы большие светлые плоскости выглядят пластиком, а браузер
+ * ещё и рисует на них ступеньки градиента. Шум нарисован тем же SVG-фильтром,
+ * поэтому не стоит ни одного запроса.
+ */
+.slab::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	pointer-events: none;
+	opacity: 0.5;
+	mix-blend-mode: overlay;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E");
+}
+
+/* Блик по верхней кромке плиты — свет, скользнувший по краю стекла. */
+.slab::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	pointer-events: none;
+	background: linear-gradient(
+		160deg,
+		color-mix(in srgb, #ffffff 45%, transparent),
+		transparent 34%,
+		transparent 76%,
+		color-mix(in srgb, #ffffff 14%, transparent)
+	);
+}
+
+/* Радужная кромка. Настоящая хроматическая аберрация стоила бы двух
+   дополнительных проходов фильтра на каждый кадр; тот же зрительный эффект
+   даёт пара смещённых теней по краю — за одну отрисовку. */
+.chroma::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	pointer-events: none;
+	box-shadow:
+		inset 0.6px 0 0 rgb(120 170 255 / 0.28),
+		inset -0.6px 0 0 rgb(255 140 170 / 0.22),
+		inset 0 -0.6px 0 rgb(150 255 230 / 0.14);
+}
+
+/* ── Кнопки ──────────────────────────────────────────────────────────────── */
+.btn {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	padding: 13px 26px;
+	border-radius: 999px;
+	border: 1px solid var(--glass-edge);
+	background: var(--glass-2);
+	color: var(--ink);
+	font-family: var(--font-sans);
+	font-size: 0.95rem;
+	font-weight: 450;
+	cursor: pointer;
+	white-space: nowrap;
+	-webkit-backdrop-filter: blur(var(--blur-1)) saturate(150%);
+	backdrop-filter: blur(var(--blur-1)) saturate(150%);
+	box-shadow: var(--shadow-1), var(--sheen);
+	transition:
+		transform var(--t-base) var(--ease-out),
+		box-shadow var(--t-base) var(--ease-out),
+		background var(--t-fast) var(--ease-out),
+		border-color var(--t-fast) var(--ease-out);
+}
+.btn:hover {
+	transform: translateY(-2px);
+	background: var(--glass-3);
+	border-color: var(--glass-edge-hot);
+	box-shadow: var(--shadow-2), var(--sheen);
+}
+.btn:active {
+	transform: translateY(0) scale(0.985);
+	transition-duration: 0.12s;
+}
+.btn:focus-visible {
+	outline: 2px solid var(--accent);
+	outline-offset: 3px;
+}
+
+/**
+ * Главное действие — тоже стекло, но самое плотное и самое светлое.
+ *
+ * Сплошная заливка выглядела наклейкой рядом со стеклянным доком. Здесь белое
+ * стекло почти непрозрачно: сквозь него угадывается движение полотна, а тёмные
+ * буквы на нём остаются читаемыми при любом кадре фона. Прозрачнее делать
+ * нельзя — на светлой складке текст начнёт пропадать.
+ */
+.btn-primary {
+	border-color: color-mix(in srgb, #ffffff 70%, transparent);
+	background: color-mix(in srgb, var(--accent) 92%, transparent);
+	color: var(--accent-ink);
+	-webkit-backdrop-filter: blur(var(--blur-2)) saturate(180%);
+	backdrop-filter: blur(var(--blur-2)) saturate(180%);
+	box-shadow:
+		0 10px 34px rgb(0 0 0 / 0.4),
+		inset 0 1px 0 color-mix(in srgb, #ffffff 85%, transparent);
+}
+.btn-primary:hover {
+	background: var(--accent);
+	box-shadow:
+		0 18px 48px rgb(0 0 0 / 0.5),
+		inset 0 1px 0 color-mix(in srgb, #ffffff 90%, transparent);
+}
+.btn-quiet {
+	border-color: transparent;
+	background: transparent;
+	box-shadow: none;
+	-webkit-backdrop-filter: none;
+	backdrop-filter: none;
+}
+.btn-quiet:hover {
+	background: var(--glass-1);
+	box-shadow: none;
+}
+.btn-lg {
+	padding: 16px 34px;
+	font-size: 1rem;
+}
+
+/* ── Ярлык ───────────────────────────────────────────────────────────────── */
+.badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 5px 12px;
+	border-radius: 999px;
+	border: 1px solid var(--glass-edge);
+	background: var(--glass-2);
+	font-size: 0.68rem;
+	font-weight: 500;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--ink-soft);
+}
+
+/* ── Появление ───────────────────────────────────────────────────────────── */
+/* Меняются только прозрачность и сдвиг — то, что не заставляет браузер
+   пересчитывать раскладку. Соседние блоки стоят на месте. */
+.reveal {
+	opacity: 0;
+	transform: translate3d(0, 26px, 0);
+	transition:
+		opacity var(--t-slow) var(--ease-out),
+		transform var(--t-slow) var(--ease-out);
+}
+.reveal.in {
+	opacity: 1;
+	transform: none;
+}
+/* Ступенька для соседей в одном ряду: они появляются друг за другом, а не
+   разом. Задаётся переменной прямо в разметке. */
+.reveal {
+	transition-delay: var(--delay, 0ms);
+}
+
+.rule {
+	height: 1px;
+	border: 0;
+	margin: 0;
+	background: linear-gradient(90deg, transparent, var(--line), transparent);
+}
+
+/* ── Доступность ─────────────────────────────────────────────────────────── */
+.skip {
+	position: absolute;
+	left: -9999px;
+	top: 0;
+	z-index: 100;
+	padding: 12px 20px;
+	border-radius: 0 0 var(--radius) 0;
+	background: var(--accent);
+	color: var(--accent-ink);
+}
+.skip:focus {
+	left: 0;
+}
+
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0 0 0 0);
+	white-space: nowrap;
+	border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto;
+	}
+	.reveal,
+	.reveal.in {
+		opacity: 1;
+		transform: none;
+		transition: none;
+	}
+	.btn:hover,
+	.btn:active {
+		transform: none;
+	}
+}

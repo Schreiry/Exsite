@@ -1,0 +1,50 @@
+# Сборка и публикация витрины на GitHub Pages.
+#
+# Этот файл живёт В РЕПОЗИТОРИИ САЙТА (Exsite) и запускается сам при каждой
+# отправке в main. Ничего запускать руками не нужно.
+#
+# Адрес. Пока своего домена нет, сайт живёт по `schreiry.github.io/Exsite`, и
+# всем ссылкам нужен префикс `/Exsite` — его задаёт SITE_BASE ниже.
+# Когда домен появится: удалить строку `SITE_BASE: /Exsite`, положить рядом с
+# этим файлом `static/CNAME` с одной строкой — вашим доменом. Больше ничего.
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: npm run build
+        env:
+          SITE_BASE: /Exsite
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: build
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
